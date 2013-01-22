@@ -10,7 +10,7 @@ Author URI: http://kasparsj.wordpress.com
 */
 class Recent_Posts_Widget extends WP_Widget {
 
-	function __construct() {
+	public function __construct() {
 		$widget_ops = array('classname' => 'widget_recent_entries', 'description' => __( "The most recent posts on your site") );
 		parent::__construct('recent-posts', __('Recent Posts'), $widget_ops);
 		$this->alt_option_name = 'widget_recent_entries';
@@ -20,7 +20,7 @@ class Recent_Posts_Widget extends WP_Widget {
 		add_action( 'switch_theme', array($this, 'flush_widget_cache') );
 	}
 
-	function widget($args, $instance) {
+	public function widget($args, $instance) {
 		$cache = wp_cache_get('widget_recent_posts', 'widget');
 
 		if ( !is_array($cache) )
@@ -72,7 +72,7 @@ class Recent_Posts_Widget extends WP_Widget {
 		<?php endwhile; ?>
 		</ul>
         <?php if ($show_archive_link) : ?>
-        <a href="<?php get_post_type_archive_link( $post_type ); ?>" class="archive-link"><?php _e('Archive')?> &raquo;</a>
+        <a href="<?=$this->get_post_type_archive_link( $post_type ); ?>" class="archive-link"><?php _e('Archive')?> &raquo;</a>
         <?php endif; ?>
 		<?php echo $after_widget; ?>
 <?php
@@ -85,7 +85,7 @@ class Recent_Posts_Widget extends WP_Widget {
 		wp_cache_set('widget_recent_posts', $cache, 'widget');
 	}
 
-	function update( $new_instance, $old_instance ) {
+	public function update( $new_instance, $old_instance ) {
 		$instance = $old_instance;
 		$instance['title'] = strip_tags($new_instance['title']);
 		$instance['number'] = (int) $new_instance['number'];
@@ -104,11 +104,11 @@ class Recent_Posts_Widget extends WP_Widget {
 		return $instance;
 	}
 
-	function flush_widget_cache() {
+	public function flush_widget_cache() {
 		wp_cache_delete('widget_recent_posts', 'widget');
 	}
 
-	function form( $instance ) {
+	public function form( $instance ) {
 		$title     = isset( $instance['title'] ) ? esc_attr( $instance['title'] ) : '';
 		$number    = isset( $instance['number'] ) ? absint( $instance['number'] ) : 5;
 		$show_date = isset( $instance['show_date'] ) ? (bool) $instance['show_date'] : false;
@@ -148,6 +148,13 @@ class Recent_Posts_Widget extends WP_Widget {
 		<label for="<?php echo $this->get_field_id( 'show_archive_link' ); ?>"><?php _e( 'Display archive link?' ); ?></label></p>
 <?php
 	}
+    
+    protected function get_post_type_archive_link($post_type) {
+        if ($post_type == 'post' && 'page' == get_option( 'show_on_front') && ($page_id = get_option('page_for_posts'))) {
+            return get_permalink($page_id);
+        }
+        return get_post_type_archive_link($post_type);
+    }
 }
 
 function register_recent_posts_widget() {
