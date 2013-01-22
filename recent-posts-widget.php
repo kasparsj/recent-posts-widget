@@ -40,6 +40,7 @@ class Recent_Posts_Widget extends WP_Widget {
 		$title = apply_filters('widget_title', empty($instance['title']) ? __('Recent Posts') : $instance['title'], $instance, $this->id_base);
 		if ( empty( $instance['number'] ) || ! $number = absint( $instance['number'] ) )
  			$number = 10;
+        $show_title = isset( $instance['show_title'] ) ? $instance['show_title'] : false;
 		$show_date = isset( $instance['show_date'] ) ? $instance['show_date'] : false;
         $show_excerpt = isset( $instance['show_excerpt'] ) ? $instance['show_excerpt'] : false;
         $show_thumb = isset( $instance['show_thumb'] ) ? $instance['show_thumb'] : false;
@@ -59,10 +60,11 @@ class Recent_Posts_Widget extends WP_Widget {
             <?php if ($show_thumb) : ?>
                     <?php the_post_thumbnail(array($thumb_size), array('class' => 'alignleft'));?>
             <?php endif; ?>
-            <?php if ($show_excerpt && get_the_excerpt()): ?>
-                    <?php echo get_the_excerpt() ?>
-            <?php else: ?>
-                    <?php if ( get_the_title() ) the_title(); else the_ID(); ?>
+            <?php if ($show_title): ?>
+                    <span class="entry-title"><?php if ( get_the_title() ) the_title(); elseif (!$show_excerpt) the_ID(); ?></span>
+            <?php endif; ?>
+            <?php if ($show_excerpt): ?>
+                    <span class="entry-summary"><?php if ( get_the_excerpt() ) the_excerpt(); elseif (!$show_title && get_the_title()) the_title(); else the_ID(); ?>
             <?php endif; ?>
                 </a>
 			<?php if ( $show_date ) : ?>
@@ -89,6 +91,7 @@ class Recent_Posts_Widget extends WP_Widget {
 		$instance = $old_instance;
 		$instance['title'] = strip_tags($new_instance['title']);
 		$instance['number'] = (int) $new_instance['number'];
+        $instance['show_title'] = (bool) $new_instance['show_title'];
 		$instance['show_date'] = (bool) $new_instance['show_date'];
         $instance['show_excerpt'] = (bool) $new_instance['show_excerpt'];
         $instance['show_thumb'] = (bool) $new_instance['show_thumb'];
@@ -111,6 +114,7 @@ class Recent_Posts_Widget extends WP_Widget {
 	public function form( $instance ) {
 		$title     = isset( $instance['title'] ) ? esc_attr( $instance['title'] ) : '';
 		$number    = isset( $instance['number'] ) ? absint( $instance['number'] ) : 5;
+        $show_title = isset( $instance['show_title'] ) ? (bool) $instance['show_title'] : false;
 		$show_date = isset( $instance['show_date'] ) ? (bool) $instance['show_date'] : false;
         $show_excerpt = isset( $instance['show_excerpt'] ) ? (bool) $instance['show_excerpt'] : false;
         $show_thumb = isset( $instance['show_thumb'] ) ? (bool) $instance['show_thumb'] : false;
@@ -125,11 +129,14 @@ class Recent_Posts_Widget extends WP_Widget {
 		<p><label for="<?php echo $this->get_field_id( 'number' ); ?>"><?php _e( 'Number of posts to show:' ); ?></label>
 		<input id="<?php echo $this->get_field_id( 'number' ); ?>" name="<?php echo $this->get_field_name( 'number' ); ?>" type="text" value="<?php echo $number; ?>" size="3" /></p>
         
+        <p><input class="checkbox" type="checkbox" <?php checked( $show_title ); ?> id="<?php echo $this->get_field_id( 'show_title' ); ?>" name="<?php echo $this->get_field_name( 'show_title' ); ?>" />
+		<label for="<?php echo $this->get_field_id( 'show_title' ); ?>"><?php _e( 'Display post title?' ); ?></label></p>
+        
 		<p><input class="checkbox" type="checkbox" <?php checked( $show_date ); ?> id="<?php echo $this->get_field_id( 'show_date' ); ?>" name="<?php echo $this->get_field_name( 'show_date' ); ?>" />
 		<label for="<?php echo $this->get_field_id( 'show_date' ); ?>"><?php _e( 'Display post date?' ); ?></label></p>
         
         <p><input class="checkbox" type="checkbox" <?php checked( $show_excerpt ); ?> id="<?php echo $this->get_field_id( 'show_excerpt' ); ?>" name="<?php echo $this->get_field_name( 'show_excerpt' ); ?>" />
-		<label for="<?php echo $this->get_field_id( 'show_excerpt' ); ?>"><?php _e( 'Display post excerpt when available?' ); ?></label></p>
+		<label for="<?php echo $this->get_field_id( 'show_excerpt' ); ?>"><?php _e( 'Display post excerpt?' ); ?></label></p>
         
         <p><input class="checkbox" type="checkbox" <?php checked( $show_thumb ); ?> id="<?php echo $this->get_field_id( 'show_thumb' ); ?>" name="<?php echo $this->get_field_name( 'show_thumb' ); ?>" />
 		<label for="<?php echo $this->get_field_id( 'show_thumb' ); ?>"><?php _e( 'Display thumbnail?' ); ?></label></p>
