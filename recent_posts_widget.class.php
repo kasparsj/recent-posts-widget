@@ -1,5 +1,8 @@
 <?php
 
+// Exit if accessed directly
+if( !defined( 'ABSPATH' ) ) exit;
+
 class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
 
 	public function widget($args, $instance) {
