@@ -4,6 +4,9 @@
 if( !defined( 'ABSPATH' ) ) exit;
 
 class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
+    
+    protected $excerpt_size = 20;
+    protected $excerpt_more = '&#133;';
 
 	public function widget($args, $instance) {
 		$cache = wp_cache_get('widget_recent_posts', 'widget');
@@ -28,10 +31,17 @@ class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
         $show_title = isset( $instance['show_title'] ) ? $instance['show_title'] : true;
 		$show_date = isset( $instance['show_date'] ) ? $instance['show_date'] : false;
         $show_excerpt = isset( $instance['show_excerpt'] ) ? $instance['show_excerpt'] : false;
+        $excerpt_size = empty( $instance['excerpt_size'] ) ? 20 : $instance['excerpt_size'];
         $show_thumb = isset( $instance['show_thumb'] ) ? $instance['show_thumb'] : false;
         $thumb_size = empty( $instance['thumb_size'] ) ? 'thumbnail' : $instance['thumb_size'];
         $post_type = empty( $instance['post_type'] ) ? 'post' : $instance['post_type'];
         $show_archive_link = isset( $instance['show_archive_link'] ) ? $instance['show_archive_link'] : false;
+        
+        if ($excerpt_size) {
+            $this->excerpt_size = $excerpt_size;
+            add_filter('excerpt_length', array($this, 'excerpt_length'));
+        }
+        add_filter('excerpt_more', array($this, 'excerpt_more'));
 
 		$r = new WP_Query( apply_filters( 'widget_posts_args', array(
             'posts_per_page' => $number,
@@ -55,7 +65,7 @@ class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
                     <span class="entry-title"><?php if ( get_the_title() ) the_title(); elseif (!$show_excerpt) the_ID(); ?></span>
             <?php endif; ?>
             <?php if ($show_excerpt): ?>
-                    <span class="entry-summary"><?php if ( get_the_excerpt() ) the_excerpt(); elseif (!$show_title && get_the_title()) the_title(); elseif (!$show_title) the_ID(); ?>
+                    <span class="entry-summary"><?php if ( get_the_excerpt() ) echo wp_trim_excerpt(get_the_excerpt()); elseif (!$show_title && get_the_title()) the_title(); elseif (!$show_title) the_ID(); ?>
             <?php endif; ?>
                 </a>
 			<?php if ( $show_date ) : ?>
@@ -69,6 +79,11 @@ class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
         <?php endif; ?>
 		<?php echo $after_widget; ?>
 <?php
+
+        remove_filter('excerpt_more', array($this, 'excerpt_more'));
+        if ($excerpt_size)
+            remove_filter('excerpt_length', array($this, 'excerpt_length'));
+        
 		// Reset the global $the_post as this query will have stomped on it
 		wp_reset_postdata();
 
@@ -77,6 +92,14 @@ class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
 		$cache[$args['widget_id']] = ob_get_flush();
 		wp_cache_set('widget_recent_posts', $cache, 'widget');
 	}
+    
+    public function excerpt_length($length) {
+        return $this->excerpt_size;
+    }
+    
+    public function excerpt_more($length) {
+        return $this->excerpt_more;
+    }
 
 	public function update( $new_instance, $old_instance ) {
         $instance = parent::update($new_instance, $old_instance);
@@ -84,6 +107,7 @@ class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
         $instance['show_title'] = (bool) $new_instance['show_title'];
 		$instance['show_date'] = (bool) $new_instance['show_date'];
         $instance['show_excerpt'] = (bool) $new_instance['show_excerpt'];
+        $instance['excerpt_size'] = strip_tags($new_instance['excerpt_size']);
         $instance['show_thumb'] = (bool) $new_instance['show_thumb'];
         $instance['thumb_size'] = strip_tags($new_instance['thumb_size']);
         $instance['post_type'] = strip_tags($new_instance['post_type']);
@@ -98,6 +122,7 @@ class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
         $show_title = isset( $instance['show_title'] ) ? (bool) $instance['show_title'] : true;
 		$show_date = isset( $instance['show_date'] ) ? (bool) $instance['show_date'] : false;
         $show_excerpt = isset( $instance['show_excerpt'] ) ? (bool) $instance['show_excerpt'] : false;
+        $excerpt_size = isset( $instance['excerpt_size'] ) ? $instance['excerpt_size'] : 20;
         $show_thumb = isset( $instance['show_thumb'] ) ? (bool) $instance['show_thumb'] : false;
         $thumb_size = isset( $instance['thumb_size'] ) ? $instance['thumb_size'] : '';
         $post_type	= esc_attr($instance['post_type']);
@@ -118,6 +143,9 @@ class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
         
         <p><input class="checkbox" type="checkbox" <?php checked( $show_excerpt ); ?> id="<?php echo $this->get_field_id( 'show_excerpt' ); ?>" name="<?php echo $this->get_field_name( 'show_excerpt' ); ?>" />
 		<label for="<?php echo $this->get_field_id( 'show_excerpt' ); ?>"><?php _e( 'Display post excerpt?' ); ?></label></p>
+        
+        <p><label for="<?php echo $this->get_field_id( 'excerpt_size' ); ?>"><?php _e( 'Excerpt size:' ); ?></label>
+		<input id="<?php echo $this->get_field_id( 'excerpt_size' ); ?>" name="<?php echo $this->get_field_name( 'excerpt_size' ); ?>" type="text" value="<?php echo $excerpt_size; ?>" /> words</p>
         
         <p><input class="checkbox" type="checkbox" <?php checked( $show_thumb ); ?> id="<?php echo $this->get_field_id( 'show_thumb' ); ?>" name="<?php echo $this->get_field_name( 'show_thumb' ); ?>" />
 		<label for="<?php echo $this->get_field_id( 'show_thumb' ); ?>"><?php _e( 'Display thumbnail?' ); ?></label></p>
