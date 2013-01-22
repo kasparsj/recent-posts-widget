@@ -1,24 +1,6 @@
 <?php
 
-/*
-Plugin Name: Recent Posts Widget
-Plugin URI: http://github.com/kasparsj/recent-posts-widget
-Description: Extends the default Recent posts widget with more otions: show excerpt when available, show thumbnail, choose post type and show archive link.
-Version: 1.0
-Author: Kaspars Jaudzems
-Author URI: http://kasparsj.wordpress.com
-*/
-class Recent_Posts_Widget extends WP_Widget {
-
-	public function __construct() {
-		$widget_ops = array('classname' => 'widget_recent_entries', 'description' => __( "The most recent posts on your site") );
-		parent::__construct('recent-posts', __('Recent Posts'), $widget_ops);
-		$this->alt_option_name = 'widget_recent_entries';
-
-		add_action( 'save_post', array($this, 'flush_widget_cache') );
-		add_action( 'deleted_post', array($this, 'flush_widget_cache') );
-		add_action( 'switch_theme', array($this, 'flush_widget_cache') );
-	}
+class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
 
 	public function widget($args, $instance) {
 		$cache = wp_cache_get('widget_recent_posts', 'widget');
@@ -40,7 +22,7 @@ class Recent_Posts_Widget extends WP_Widget {
 		$title = apply_filters('widget_title', empty($instance['title']) ? __('Recent Posts') : $instance['title'], $instance, $this->id_base);
 		if ( empty( $instance['number'] ) || ! $number = absint( $instance['number'] ) )
  			$number = 10;
-        $show_title = isset( $instance['show_title'] ) ? $instance['show_title'] : false;
+        $show_title = isset( $instance['show_title'] ) ? $instance['show_title'] : true;
 		$show_date = isset( $instance['show_date'] ) ? $instance['show_date'] : false;
         $show_excerpt = isset( $instance['show_excerpt'] ) ? $instance['show_excerpt'] : false;
         $show_thumb = isset( $instance['show_thumb'] ) ? $instance['show_thumb'] : false;
@@ -48,7 +30,13 @@ class Recent_Posts_Widget extends WP_Widget {
         $post_type = empty( $instance['post_type'] ) ? 'post' : $instance['post_type'];
         $show_archive_link = isset( $instance['show_archive_link'] ) ? $instance['show_archive_link'] : false;
 
-		$r = new WP_Query( apply_filters( 'widget_posts_args', array( 'posts_per_page' => $number, 'post_type' => $post_type, 'no_found_rows' => true, 'post_status' => 'publish', 'ignore_sticky_posts' => true ) ) );
+		$r = new WP_Query( apply_filters( 'widget_posts_args', array(
+            'posts_per_page' => $number,
+            'post_type' => $post_type,
+            'no_found_rows' => true,
+            'post_status' => 'publish',
+            'ignore_sticky_posts' => true
+        ) ) );
 		if ($r->have_posts()) :
 ?>
 		<?php echo $before_widget; ?>
@@ -64,7 +52,7 @@ class Recent_Posts_Widget extends WP_Widget {
                     <span class="entry-title"><?php if ( get_the_title() ) the_title(); elseif (!$show_excerpt) the_ID(); ?></span>
             <?php endif; ?>
             <?php if ($show_excerpt): ?>
-                    <span class="entry-summary"><?php if ( get_the_excerpt() ) the_excerpt(); elseif (!$show_title && get_the_title()) the_title(); else the_ID(); ?>
+                    <span class="entry-summary"><?php if ( get_the_excerpt() ) the_excerpt(); elseif (!$show_title && get_the_title()) the_title(); elseif (!$show_title) the_ID(); ?>
             <?php endif; ?>
                 </a>
 			<?php if ( $show_date ) : ?>
@@ -88,9 +76,8 @@ class Recent_Posts_Widget extends WP_Widget {
 	}
 
 	public function update( $new_instance, $old_instance ) {
-		$instance = $old_instance;
-		$instance['title'] = strip_tags($new_instance['title']);
-		$instance['number'] = (int) $new_instance['number'];
+        $instance = parent::update($new_instance, $old_instance);
+        
         $instance['show_title'] = (bool) $new_instance['show_title'];
 		$instance['show_date'] = (bool) $new_instance['show_date'];
         $instance['show_excerpt'] = (bool) $new_instance['show_excerpt'];
@@ -98,23 +85,14 @@ class Recent_Posts_Widget extends WP_Widget {
         $instance['thumb_size'] = strip_tags($new_instance['thumb_size']);
         $instance['post_type'] = strip_tags($new_instance['post_type']);
         $instance['show_archive_link'] = (bool) $new_instance['show_archive_link'];
-		$this->flush_widget_cache();
-
-		$alloptions = wp_cache_get( 'alloptions', 'options' );
-		if ( isset($alloptions['widget_recent_entries']) )
-			delete_option('widget_recent_entries');
 
 		return $instance;
-	}
-
-	public function flush_widget_cache() {
-		wp_cache_delete('widget_recent_posts', 'widget');
 	}
 
 	public function form( $instance ) {
 		$title     = isset( $instance['title'] ) ? esc_attr( $instance['title'] ) : '';
 		$number    = isset( $instance['number'] ) ? absint( $instance['number'] ) : 5;
-        $show_title = isset( $instance['show_title'] ) ? (bool) $instance['show_title'] : false;
+        $show_title = isset( $instance['show_title'] ) ? (bool) $instance['show_title'] : true;
 		$show_date = isset( $instance['show_date'] ) ? (bool) $instance['show_date'] : false;
         $show_excerpt = isset( $instance['show_excerpt'] ) ? (bool) $instance['show_excerpt'] : false;
         $show_thumb = isset( $instance['show_thumb'] ) ? (bool) $instance['show_thumb'] : false;
@@ -163,12 +141,5 @@ class Recent_Posts_Widget extends WP_Widget {
         return get_post_type_archive_link($post_type);
     }
 }
-
-function register_recent_posts_widget() {
-    unregister_widget("WP_Widget_Recent_Posts");
-    return register_widget("Recent_Posts_Widget");
-}
-
-add_action('widgets_init', 'register_recent_posts_widget');
 
 ?>
