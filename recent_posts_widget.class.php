@@ -24,6 +24,8 @@ class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
 
 		ob_start();
 		extract($args);
+        
+        global $_wp_additional_image_sizes;
 
 		$title = apply_filters('widget_title', empty($instance['title']) ? __('Recent Posts') : $instance['title'], $instance, $this->id_base);
 		if ( empty( $instance['number'] ) || ! $number = absint( $instance['number'] ) )
@@ -33,7 +35,7 @@ class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
         $show_excerpt = isset( $instance['show_excerpt'] ) ? $instance['show_excerpt'] : false;
         $excerpt_size = empty( $instance['excerpt_size'] ) ? 20 : $instance['excerpt_size'];
         $show_thumb = isset( $instance['show_thumb'] ) ? $instance['show_thumb'] : false;
-        $thumb_size = empty( $instance['thumb_size'] ) ? 'post-thumbnail' : $instance['thumb_size'];
+        $thumb_size = empty( $instance['thumb_size'] ) ? (isset($_wp_additional_image_sizes['post-thumbnail']) ? 'post-thumbnail' : 'thumbnail') : $instance['thumb_size'];
         $post_type = empty( $instance['post_type'] ) ? 'post' : $instance['post_type'];
         $show_archive_link = isset( $instance['show_archive_link'] ) ? $instance['show_archive_link'] : false;
         
