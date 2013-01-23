@@ -61,7 +61,7 @@ class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
 			<li>
 				<a href="<?php the_permalink() ?>" title="<?php echo esc_attr( get_the_title() ? get_the_title() : get_the_ID() ); ?>">
             <?php if ($show_thumb) : ?>
-                    <div class="post-thumbnail"><?php the_post_thumbnail((is_numeric($thumb_size) ? array($thumb_size) : $thumb_size));?></div>
+                    <span class="post-thumbnail"><?php the_post_thumbnail((is_numeric($thumb_size) ? array($thumb_size) : $thumb_size));?></span>
             <?php endif; ?>
             <?php if ($show_title): ?>
                     <span class="post-title"><?php if ( get_the_title() ) the_title(); elseif (!$show_excerpt) the_ID(); ?></span>
