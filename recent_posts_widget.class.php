@@ -33,7 +33,7 @@ class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
         $show_excerpt = isset( $instance['show_excerpt'] ) ? $instance['show_excerpt'] : false;
         $excerpt_size = empty( $instance['excerpt_size'] ) ? 20 : $instance['excerpt_size'];
         $show_thumb = isset( $instance['show_thumb'] ) ? $instance['show_thumb'] : false;
-        $thumb_size = empty( $instance['thumb_size'] ) ? 'thumbnail' : $instance['thumb_size'];
+        $thumb_size = empty( $instance['thumb_size'] ) ? 'post-thumbnail' : $instance['thumb_size'];
         $post_type = empty( $instance['post_type'] ) ? 'post' : $instance['post_type'];
         $show_archive_link = isset( $instance['show_archive_link'] ) ? $instance['show_archive_link'] : false;
         
@@ -59,13 +59,13 @@ class Recent_Posts_Widget extends WP_Widget_Recent_Posts {
 			<li>
 				<a href="<?php the_permalink() ?>" title="<?php echo esc_attr( get_the_title() ? get_the_title() : get_the_ID() ); ?>">
             <?php if ($show_thumb) : ?>
-                    <?php the_post_thumbnail(array($thumb_size), array('class' => 'alignleft'));?>
+                    <div class="post-thumbnail"><?php the_post_thumbnail((is_numeric($thumb_size) ? array($thumb_size) : $thumb_size));?></div>
             <?php endif; ?>
             <?php if ($show_title): ?>
-                    <span class="entry-title"><?php if ( get_the_title() ) the_title(); elseif (!$show_excerpt) the_ID(); ?></span>
+                    <span class="post-title"><?php if ( get_the_title() ) the_title(); elseif (!$show_excerpt) the_ID(); ?></span>
             <?php endif; ?>
             <?php if ($show_excerpt): ?>
-                    <span class="entry-summary"><?php if ( get_the_excerpt() ) echo wp_trim_excerpt(get_the_excerpt()); elseif (!$show_title && get_the_title()) the_title(); elseif (!$show_title) the_ID(); ?>
+                    <span class="post-summary"><?php if ( get_the_excerpt() ) echo wp_trim_excerpt(get_the_excerpt()); elseif (!$show_title && get_the_title()) the_title(); elseif (!$show_title) the_ID(); ?>
             <?php endif; ?>
                 </a>
 			<?php if ( $show_date ) : ?>
